@@ -24,130 +24,184 @@ namespace Szyfr_Playfair
         {
             InitializeComponent();
         }
+        private static int Mod(int a, int b)
+        {
+            return (a % b + b) % b;
+        }
+        #region Znajdź wystąpienia
+        private static List<int> FindAllOccurrences(string str, char value)
+        {
+            List<int> indexes = new List<int>();
 
+            int index = 0;
+            while ((index = str.IndexOf(value, index)) != -1)
+                indexes.Add(index++);
+
+            return indexes;
+        }
+        #endregion
+        #region Usuń powtórzenia
+        private static string RemoveAllDuplicates(string str, List<int> indexes)
+        {
+            string retVal = str;
+
+            for (int i = indexes.Count - 1; i >= 1; i--)
+                retVal = retVal.Remove(indexes[i], 1);
+
+            return retVal;
+        }
+        #endregion
+        #region Generuj klucz
+        private static char[,] GenerateKeySquare(string key)
+        {
+            char[,] keySquare = new char[5, 5];
+            string defaultKeySquare = "ABCDEFGHIKLMNOPQRSTUVWXYZ";
+            string temporaryKey;
+            if (string.IsNullOrEmpty(key))
+                temporaryKey = "CIPHER";
+            else
+                temporaryKey = key.ToUpper();
+
+            temporaryKey = temporaryKey.Replace("J", "");
+            temporaryKey += defaultKeySquare;
+
+            for (int i = 0; i < 25; ++i)
+            {
+                List<int> indexes = FindAllOccurrences(temporaryKey, defaultKeySquare[i]);
+                temporaryKey = RemoveAllDuplicates(temporaryKey, indexes);
+            }
+
+            temporaryKey = temporaryKey.Substring(0, 25);
+
+            for (int i = 0; i < 25; ++i)
+                keySquare[(i / 5), (i % 5)] = temporaryKey[i];
+
+            return keySquare;
+        }
+        #endregion
+        #region Weź pozycję
+        private static void GetPosition(ref char[,] keySquare, char ch, ref int row, ref int col)
+        {
+            if (ch == 'J')
+                GetPosition(ref keySquare, 'I', ref row, ref col);
+
+            for (int i = 0; i < 5; ++i)
+                for (int j = 0; j < 5; ++j)
+                    if (keySquare[i, j] == ch)
+                    {
+                        row = i;
+                        col = j;
+                    }
+        }
+        #endregion
+        #region Operacje na wierszach i kolumnach
+        private static char[] SameRow(ref char[,] keySquare, int row, int col1, int col2, int encipher)
+        {
+            return new[] { keySquare[row, Mod((col1 + encipher), 5)], keySquare[row, Mod((col2 + encipher), 5)] };
+        }
+
+        private static char[] SameColumn(ref char[,] keySquare, int col, int row1, int row2, int encipher)
+        {
+            return new[] { keySquare[Mod((row1 + encipher), 5), col], keySquare[Mod((row2 + encipher), 5), col] };
+        }
+
+        private static char[] SameRowColumn(ref char[,] keySquare, int row, int col, int encipher)
+        {
+            return new[] { keySquare[Mod((row + encipher), 5), Mod((col + encipher), 5)], keySquare[Mod((row + encipher), 5), Mod((col + encipher), 5)] };
+        }
+
+        private static char[] DifferentRowColumn(ref char[,] keySquare, int row1, int col1, int row2, int col2)
+        {
+            return new[] { keySquare[row1, col2], keySquare[row2, col1] };
+        }
+        #endregion
+        #region Usuń pozostałe znaki
+        private static string RemoveOtherChars(string input)
+        {
+            string output = input;
+
+            for (int i = 0; i < output.Length; ++i)
+                if (!char.IsLetter(output[i]))
+                    output = output.Remove(i, 1);
+
+            return output;
+        }
+        #endregion
+        #region Dostosuj wyjście
+        private static string AdjustOutput(string input, string output)
+        {
+            StringBuilder retVal = new StringBuilder(output);
+
+            for (int i = 0; i < input.Length; ++i)
+            {
+                if (!char.IsLetter(input[i]))
+                    retVal = retVal.Insert(i, input[i].ToString());
+
+                if (char.IsLower(input[i]))
+                    retVal[i] = char.ToLower(retVal[i]);
+            }
+
+            return retVal.ToString();
+        }
+        #endregion
+        #region Szyfruj/Deszyfruj
+        private static string Cipher(string input, string key, bool encipher)
+        {
+            string retVal = string.Empty;
+            char[,] keySquare = GenerateKeySquare(key);
+            string tempInput = RemoveOtherChars(input);
+            int e = encipher ? 1 : -1;
+
+            if ((tempInput.Length % 2) != 0)
+                tempInput += "X";
+
+            for (int i = 0; i < tempInput.Length; i += 2)
+            {
+                int row1 = 0;
+                int col1 = 0;
+                int row2 = 0;
+                int col2 = 0;
+
+                GetPosition(ref keySquare, char.ToUpper(tempInput[i]), ref row1, ref col1);
+                GetPosition(ref keySquare, char.ToUpper(tempInput[i + 1]), ref row2, ref col2);
+
+                if (row1 == row2 && col1 == col2)
+                {
+                    retVal += new string(SameRowColumn(ref keySquare, row1, col1, e));
+                }
+                else if (row1 == row2)
+                {
+                    retVal += new string(SameRow(ref keySquare, row1, col1, col2, e));
+                }
+                else if (col1 == col2)
+                {
+                    retVal += new string(SameColumn(ref keySquare, col1, row1, row2, e));
+                }
+                else
+                {
+                    retVal += new string(DifferentRowColumn(ref keySquare, row1, col1, row2, col2));
+                }
+            }
+
+            retVal = AdjustOutput(input, retVal);
+
+            return retVal;
+        } 
+        #endregion
         private void szyfruj(object sender, RoutedEventArgs e)
         {
-            int licznik = 0;
-            int i = 0;
-            int j = 0;
-            bool warunek;
-            string temp_klucz ="";
-            string temp_tekst ="";
-            StringBuilder sb = new StringBuilder(TxtBoxKlucz.Text);
-            int []wspolrzedne = new int [2];
-            char temp ='a';
-            //Tworzenie klucza na podstawie słowa kluczowego
-            for (i = 0; i < TxtBoxKlucz.Text.Length; i++) //Usuwanie powtarzających się znaków
-            {
-                warunek = true;
-                for (j = 0; j < temp_klucz.Length; j++)
-                {
-                    if (TxtBoxKlucz.Text[i] == temp_klucz[j])
-                    {
-                        warunek = false;
-                        break;
-                    }
-                }
-                if (warunek)
-                {
-                    temp_klucz += TxtBoxKlucz.Text[i];
-                }
-            }
-
-            for (i = 65; i < 91; i++)//Dodawanie reszty alfabetu do słowa klucza
-            {
-                warunek = true;
-                for (j = 0; j < temp_klucz.Length; j++)
-                {
-                    if (temp_klucz[j] == i)
-                    {
-                        warunek = false;
-                        break;
-                    }
-                }
-                if (warunek)
-                {
-                    temp_klucz += i;
-                }
-            }
-            TxtBoxKlucz.Text = temp_klucz;
-
-            warunek = false;
-            for (i = 0; i < 25; i++)
-            {
-                if (TxtBoxKlucz.Text[i] =='J')
-            {
-                warunek = true;
-            }
-            if (warunek)
-            {
-                    sb[i] = TxtBoxKlucz.Text[i + 1];
-                    TxtBoxKlucz.Text = sb.ToString();
-            }
+            TxtBoxSzyf.Text = Cipher(TxtBoxNieszyf.Text, TxtBoxKlucz.Text, true);
         }
-
-        //Przygotowanie tekstu jawnego do obróbki
-        temp_tekst+= TxtBoxNieszyf.Text[0];
-    for(i=1;i< TxtBoxNieszyf.Text.Length;i++)
-    {
-        if(temp== TxtBoxNieszyf.Text[i])
-            temp_tekst+='X';
-        if(TxtBoxNieszyf.Text[i]=='J')
-            temp_tekst+='I';
-        else
-            temp_tekst+= TxtBoxNieszyf.Text[i];
-        temp= TxtBoxNieszyf.Text[i];
-    }
-    if(TxtBoxNieszyf.Text.Length%2==1)
-        TxtBoxNieszyf.Text +='X';
-        TxtBoxNieszyf.Text = temp_tekst;
-    
-    
-    //Proces szyfrowania
-    for(i=0;i< TxtBoxNieszyf.Text.Length;i+=2)
-    {
-        //Przeszukiwanie klucza
-        for(j=0;j<25;j++)
-        {
-            if(TxtBoxKlucz.Text[j]== TxtBoxNieszyf.Text[i])
-                wspolrzedne[0]=j;    
-            if(TxtBoxKlucz.Text[j]== TxtBoxNieszyf.Text[i + 1])
-                wspolrzedne[1]=j;
-        }
-        
-        //Szyfrowanie
-        if((wspolrzedne[0]%5)==(wspolrzedne[1]%5))//Pionowo
-        {
-                    sb[i]= TxtBoxKlucz.Text[(wspolrzedne[0] + 5) % 25];
-                    TxtBoxKlucz.Text = sb.ToString();
-                    sb[i + 1]= TxtBoxKlucz.Text[(wspolrzedne[1] + 5) % 25];
-                    TxtBoxKlucz.Text = sb.ToString();
-        }
-        else if((wspolrzedne[0]/5)==(wspolrzedne[1]/5))//Poziomo
-        {
-                    sb[i]= TxtBoxKlucz.Text[(wspolrzedne[0] / 5) * 5 + ((wspolrzedne[0] % 5 + 1) % 5)];
-                    TxtBoxKlucz.Text = sb.ToString();
-                    sb[i + 1]= TxtBoxKlucz.Text[(wspolrzedne[1] / 5) * 5 + ((wspolrzedne[1] % 5 + 1) % 5)];
-                    TxtBoxKlucz.Text = sb.ToString();
-                }
-        else//Na ukos
-        {
-                    sb[i]= TxtBoxKlucz.Text[(wspolrzedne[0] / 5) * 5 + (wspolrzedne[1] % 5)];
-                    TxtBoxKlucz.Text = sb.ToString();
-                    sb[i + 1]= TxtBoxKlucz.Text[(wspolrzedne[1] / 5) * 5 + (wspolrzedne[0] % 5)];
-                    TxtBoxKlucz.Text = sb.ToString();
-                }
-    }
-        }
-
-        private void sprawdzaj_klucz(object sender, TextChangedEventArgs e)
-        {
-
-        }
-
         private void deszyfruj(object sender, RoutedEventArgs e)
         {
-
+            TxtBoxRoszyf.Text = Cipher(TxtBoxZaszyf.Text, TxtBoxKlucz.Text, false);
+        }
+        private void sprawdzaj_klucz(object sender, TextChangedEventArgs e)
+        {
+            if (System.Text.RegularExpressions.Regex.IsMatch(TxtBoxKlucz.Text, "[^A-Z]"))
+            {
+                TxtBoxKlucz.Text = TxtBoxKlucz.Text.Remove(TxtBoxKlucz.Text.Length - 1);
+            }
         }
     }
 }

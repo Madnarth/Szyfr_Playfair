@@ -11,12 +11,12 @@
         <TextBox x:Name="TxtBoxRoszyf" HorizontalAlignment="Left" Margin="320,292,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="150" Width="200" CharacterCasing="Upper" IsReadOnly="True"/>
         <TextBox x:Name="TxtBoxSzyf" HorizontalAlignment="Left" Margin="320,41,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="150" Width="200" IsReadOnly="True"/>
         <TextBox x:Name="TxtBoxZaszyf" HorizontalAlignment="Left" Margin="15,292,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Height="150" Width="200" CharacterCasing="Upper"/>
-        <TextBox x:Name="TxtBoxKlucz" HorizontalAlignment="Left" Margin="181,208,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="172" FontSize="20" CharacterCasing="Upper" TextChanged="sprawdzaj_klucz" Height="55" RenderTransformOrigin="0.481,0.705"/>
+        <TextBox x:Name="TxtBoxKlucz" HorizontalAlignment="Left" Margin="181,198,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="172" FontSize="18" CharacterCasing="Upper" TextChanged="sprawdzaj_klucz" MaxLength="26"/>
 
         <Button x:Name="ButtSzyfruj" Content="Szyfruj" HorizontalAlignment="Left" Margin="232,94,0,0" VerticalAlignment="Top" Click="szyfruj" Height="44" Width="70" FontWeight="ExtraBold" FontSize="15" Background="GreenYellow"/>
         <Button x:Name="ButtDeszyf" Content="Deszyfruj" HorizontalAlignment="Left" Margin="227,344,0,0" VerticalAlignment="Top" Height="46" Width="80" Click="deszyfruj" FontWeight="ExtraBold" FontSize="15" Background="RoyalBlue"/>
 
-        <Label x:Name="LabKlucz" Content="Klucz" HorizontalAlignment="Left" Margin="242,172,0,0" VerticalAlignment="Top" FontWeight="ExtraBold" FontSize="15"/>
+        <Label x:Name="LabKlucz" Content="Klucz" HorizontalAlignment="Left" Margin="242,162,0,0" VerticalAlignment="Top" FontWeight="ExtraBold" FontSize="15"/>
         <Label x:Name="LabNieszyf" Content="Tekst nieszyfrowany" HorizontalAlignment="Left" Margin="39,10,0,0" VerticalAlignment="Top" FontWeight="ExtraBold" FontSize="15"/>
         <Label x:Name="LabSzyf" Content="Tekst zaszyfrowany" HorizontalAlignment="Left" Margin="342,10,0,0" VerticalAlignment="Top" FontWeight="ExtraBold" FontSize="15"/>
         <Label x:Name="LabZaszyf" Content="Tekst zaszyfrowany" HorizontalAlignment="Left" Margin="42,261,0,0" VerticalAlignment="Top" FontWeight="ExtraBold" FontSize="15"/>
